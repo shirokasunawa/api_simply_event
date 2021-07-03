@@ -9,6 +9,7 @@ const Checklists = require('../models/checklists')
 const Conversation = require('../models/conversation')
 const MessageClient = require('../models/messageClient')
 const MessageSociety = require('../models/messageSociety')
+const TypeEvents = require('../models/typeEvents')
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 
@@ -149,7 +150,7 @@ router.put('/society/:id', (req, res, next) => {
     });
 
     userClient.save()
-      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
+      .then(() => res.status(201).json(userClient))
       .catch(error => res.status(400).json({ error }));
   });
   
@@ -160,7 +161,7 @@ router.put('/society/:id', (req, res, next) => {
       ...req.body
     });
     userSociety.save()
-      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
+      .then(() => res.status(201).json(userSociety))
       .catch(error => res.status(400).json({ error }));
   });
 
@@ -345,7 +346,13 @@ router.get('/event/:id', async (req,res)=>{
                 path: 'owner',
                
                 select: ['nom','adresseMail'] 
-              }).exec(function(err, event) {
+              })
+              .populate({
+                path: '_typeEvent',
+               
+                select: ['libelle'] 
+              })
+              .exec(function(err, event) {
                 res.json(event);
                 // do something
             });
@@ -872,3 +879,101 @@ conversation.save();
         res.json({message : error.message})
     }
 })
+
+//typeEvent
+
+router.get('/typeEvents/:id', async (req,res)=>{
+    try{
+        const typeEvents=  await TypeEvents.findById(req.params.id)
+       .exec(function(err, typeEvents) {
+                res.json(typeEvents);
+                // do something
+            });
+            
+       
+    }catch(error)
+    {
+        res.json({message : error.message})
+    }
+  
+})
+
+//Creating one 
+router.post('/typeEvents/', (req, res, next) => {
+    //delete req.body._id;
+    const typeEvents = new TypeEvents({
+      ...req.body
+    });
+
+    typeEvents.save()
+      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
+      .catch(error => res.status(400).json({ error }));
+  }); 
+router.post('/typeEvents/:idtypeevents/:idevent', async (req, res, next) => {
+ 
+  
+    try{    if( !mongoose.Types.ObjectId.isValid(req.params.idtypeevents) ) return false;
+     
+        if( !mongoose.Types.ObjectId.isValid(req.params.idevent) ) return false;
+      
+        const _idtypeevents = ObjectId(req.params.idtypeevents);
+
+   
+      
+      const _idevent = ObjectId(req.params.idevent);
+      
+
+       
+        const typeEvents = await TypeEvents.findById(_idtypeevents, function(err, doc) {  });
+
+        const event = await Event.findById(_idevent, function(err, doc) {  });
+       
+    //assign conversation as a client and usersociety id
+    
+  
+     
+    event._typeEvent=typeEvents;
+    event.save();
+   
+    res.status(201).json(event);
+    }catch(error) {
+        res.status(404).json({message : error.message})
+    }
+  
+      
+    });
+
+  router.delete('/typeEvents/:id',async (req,res)=>{
+    // req.params.id
+    try{
+     const typeEvents=  await TypeEvents.findById(req.params.id).remove() ;
+     
+     res.json({message: 'type event supprimé'})
+ 
+     } catch(error) {
+         res.status(404).json({message : error.message})
+     }
+ 
+ })
+
+  router.get('/typeEvents', async (req,res)=>{
+    //res.send('Hello')
+    try{
+        const typeEvents  = await TypeEvents.find({})
+        
+        .exec(function(err, typeEvents) {
+            res.json(typeEvents);
+            // do something
+        });        
+       
+
+    } catch(error) {
+        res.json({message : error.message})
+    }
+})
+
+router.put('/typeEvents/:id', (req, res, next) => {
+    TypeEvents.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+      .then(() => res.status(200).json({ message: 'checklist modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });

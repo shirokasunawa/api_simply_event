@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 // set up port
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3030;
 
 
 const mongoose = require('mongoose');
@@ -21,7 +21,7 @@ app.use(express.json())
 
 const eventRouter = require('./routes/router')
 app.use('/events',eventRouter)
-'localhost:3000/events'
+'localhost:3030/events'
 
 
 // run server

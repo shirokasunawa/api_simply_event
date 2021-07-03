@@ -24,9 +24,11 @@ app.use((req, res, next) => {
   console.log('Réponse envoyée avec succès !');
 });
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+  res.header("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+ res.header("Access-Control-Allow-Headers","Content-Type, Accept, X-Requested-With, remember-me, Authorization, type ");
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader("Access-Control-Expose-Headers","Authorization");
     next();
   });
 
