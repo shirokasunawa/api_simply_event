@@ -51,7 +51,7 @@ router.get('/society', async (req,res)=>{
     try{
         const usersSociety  = await UserSociety.find({}).populate({
             path: "_products",
-            select: ['typeProduct','priceProduct']
+            select: ['typeProduct','nomProduct','priceProduct']
         }) // key to populate
         .then(usersSociety => {
            res.json(usersSociety); 
@@ -85,7 +85,7 @@ router.get('/society/:id',async (req,res)=>{
     try{
         const userSociety=  await UserSociety.findById(req.params.id).populate({
             path: "_products",
-            select: ['typeProduct','priceProduct']
+            select: ['typeProduct','nomProduct','priceProduct']
         }) // key to populate
         .then(usersSociety => {
            res.json(usersSociety); 
