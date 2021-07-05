@@ -373,7 +373,7 @@ router.post('/event/', (req, res, next) => {
     });
 
     event.save()
-      .then(() => res.status(201).json({ message: 'event enregistré !'}))
+      .then(() => res.status(201).json(event))
       .catch(error => res.status(400).json({ error }));
   });
 
