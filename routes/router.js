@@ -65,12 +65,17 @@ router.get('/society', async (req,res)=>{
 //Getting one client
 router.get('/client/:id', async (req,res)=>{
     try{
-        const userclient=  await UserClient.findById(req.params.id).populate({
+        const userclient=  await UserClient.find({_id: req.params.id}).populate([{
             path: "_events",
-            model: Event ,
-            select: ['titreEvent','budgetEvent']
-        }) // key to populate
+             model: Event ,
+            select: ['titreEvent','budgetEvent','_checklists']
+            
+            
+
+           
+        }])
         .then(userclient => {
+            console.log(userclient)
             res.json(userclient);
         });
   
@@ -78,7 +83,7 @@ router.get('/client/:id', async (req,res)=>{
     {
         res.json({message : error.message})
     }
-  
+
 })
 //Getting one society
 router.get('/society/:id',async (req,res)=>{
@@ -397,7 +402,6 @@ router.post('/event/', (req, res, next) => {
   });
 
   //asign event already created to userClient already created
-
   router.post('/event/:idevent/:iduserclient', async (req, res, next) => {
  
   

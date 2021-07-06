@@ -10,13 +10,18 @@ const PORT = process.env.PORT || 3030;
 const mongoose = require('mongoose');
 
 
-mongoose.connect('mongodb://localhost/myEvent', {useNewUrlParser : true});
+mongoose.connect('mongodb://localhost/myEvent', {useNewUrlParser : true, useUnifiedTopology: true});
  const db = mongoose.connection
  db.on('error',(error)=> console.log(error))
  db.once('open',()=> console.log('Connected to Database'))
 
 app.use(express.json())
 
+app.use(
+    cors({
+        origin: "http://localhost"
+    })
+)
 
 
 const eventRouter = require('./routes/router')
