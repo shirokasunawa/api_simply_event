@@ -25,9 +25,12 @@ app.use(
 
 
 const eventRouter = require('./routes/router')
+const payment = require('./routes/payment')
+
 app.use('/events',eventRouter)
 'localhost:3030/events'
-
+app.use('/payment',payment)
+'localhost:3030/payment'
 
 // run server
 app.listen(PORT, () => 
