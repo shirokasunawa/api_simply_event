@@ -10,6 +10,7 @@ const Conversation = require('../models/conversation')
 const MessageClient = require('../models/messageClient')
 const MessageSociety = require('../models/messageSociety')
 const TypeEvents = require('../models/typeEvents')
+const TypeActions = require('../models/typeactions')
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 
@@ -978,6 +979,112 @@ router.post('/typeEvents/:idtypeevents/:idevent', async (req, res, next) => {
 
 router.put('/typeEvents/:id', (req, res, next) => {
     TypeEvents.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+      .then(() => res.status(200).json({ message: 'checklist modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  //TypeActions
+  
+
+
+router.get('/typeActions/:id', async (req,res)=>{
+    try{
+        const typeActions=  await TypeActions.findById(req.params.id)
+       .exec(function(err, typeActions) {
+                res.json(typeActions);
+                // do something
+            });
+            
+       
+    }catch(error)
+    {
+        res.json({message : error.message})
+    }
+  
+})
+
+//Creating one 
+router.post('/typeActions/', (req, res, next) => {
+    //delete req.body._id;
+    const typeActions = new TypeActions({
+      ...req.body
+    });
+
+    typeActions.save()
+      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
+      .catch(error => res.status(400).json({ error }));
+  }); 
+  //assign typeEvent to typeActions
+router.post('/typeActions/:idtypeevents/:idtypeactions', async (req, res, next) => {
+ 
+  
+    try{    if( !mongoose.Types.ObjectId.isValid(req.params.idtypeevents) ) return false;
+     
+        if( !mongoose.Types.ObjectId.isValid(req.params.idtypeactions) ) return false;
+      
+        const _idtypeactions = ObjectId(req.params.idtypeactions);
+
+   
+      
+      const _idtypeevents = ObjectId(req.params.idtypeevents);
+      
+
+       
+        const typeEvents = await TypeEvents.findById(_idtypeevents, function(err, doc) {  });
+
+        const typeActions = await TypeActions.findById(_idtypeactions, function(err, doc) {  });
+       
+    //assign conversation as a client and usersociety id
+    
+  
+     
+    typeActions._typeEvent.push(typeEvents);
+    typeActions.save();
+   
+    res.status(201).json(typeActions);
+    }catch(error) {
+        res.status(404).json({message : error.message})
+    }
+  
+      
+    });
+
+  router.delete('/typeActions/:id',async (req,res)=>{
+    // req.params.id
+    try{
+     const typeActions=  await TypeActions.findById(req.params.id).remove() ;
+     
+     res.json({message: 'type event supprimé'})
+ 
+     } catch(error) {
+         res.status(404).json({message : error.message})
+     }
+ 
+ })
+
+  router.get('/typeActions', async (req,res)=>{
+    //res.send('Hello')
+    try{
+        const typeActions  = await TypeActions.find({})
+        .populate({
+            path: '_typeEvent',
+            model: TypeEvents ,
+            select: ['libelle'] 
+          })
+        
+        .exec(function(err, typeActions) {
+            res.json(typeActions);
+            // do something
+        });        
+       
+
+    } catch(error) {
+        res.json({message : error.message})
+    }
+})
+
+router.put('/typeActions/:id', (req, res, next) => {
+    TypeActions.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
       .then(() => res.status(200).json({ message: 'checklist modifié !'}))
       .catch(error => res.status(400).json({ error }));
   });
