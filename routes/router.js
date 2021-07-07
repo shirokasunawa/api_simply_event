@@ -358,6 +358,11 @@ router.get('/event/:id', async (req,res)=>{
                
                 select: ['libelle'] 
               })
+              .populate({
+                path: '_checklists',
+               
+                select: ['titreCheclist','productChecklist'] 
+              })
               .exec(function(err, event) {
                 res.json(event);
                 // do something
@@ -487,7 +492,7 @@ router.post('/checklist/', (req, res, next) => {
     });
 
     checklists.save()
-      .then(() => res.status(201).json({ message: 'checklist enregistré !'}))
+      .then(() => res.status(201).json(checklists))
       .catch(error => res.status(400).json({ error }));
   });
 
