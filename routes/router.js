@@ -2,6 +2,7 @@ const express= require('express')
 const router = express.Router()
 const UserClient = require('../models/userClient')
 const imgModel = require('../models/image');
+const Pub = require('../models/pub');
 const UserSociety = require('../models/userSociety')
 const Products = require('../models/products')
 const Event = require('../models/events')
@@ -93,6 +94,16 @@ router.get('/society/:id',async (req,res)=>{
         const userSociety=  await UserSociety.findById(req.params.id).populate({
             path: "_products",
             select: ['typeProduct','nomProduct','priceProduct']
+        })
+        .populate({
+            path: "_pubs",
+            model: Pub ,
+            select: ['img']
+        })
+        .populate({
+            path: "img",
+            model: imgModel ,
+            select: ['img']
         }) // key to populate
         .then(usersSociety => {
            res.json(usersSociety); 
@@ -1165,3 +1176,131 @@ router.get('/photo/:id', async (req,res)=>{
     }
   
 })
+
+//Pub
+
+  //Creating one user of client
+  router.post('/pub/', (req, res, next) => {
+    //delete req.body._id;
+    const pub = new Pub({
+      ...req.body
+    });
+
+    pub.save()
+      .then(() => res.status(201).json(pub))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  
+  router.get('/pub', async (req,res)=>{
+    //res.send('Hello')
+    try{
+        const pub  = await Pub.find({})
+        
+        .exec(function(err, pub) {
+            res.json(pub);
+            // do something
+        });        
+       
+
+    } catch(error) {
+        res.json({message : error.message})
+    }
+})
+
+router.put('/pub/:id', (req, res, next) => {
+    Pub.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+      .then(() => res.status(200).json({ message: 'img modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  router.delete('/pub/:id',async (req,res)=>{
+    // req.params.id
+    try{
+     const pub=  await Pub.findById(req.params.id).remove() ;
+     
+     res.json({message: 'pub supprimé'})
+ 
+     } catch(error) {
+         res.status(404).json({message : error.message})
+     }
+ 
+ })
+
+ 
+router.get('/pub/:id', async (req,res)=>{
+    try{
+        const pub=  await Pub.findById(req.params.id)
+       .exec(function(err, pub) {
+                res.json(pub);
+                // do something
+            });
+            
+       
+    }catch(error)
+    {
+        res.json({message : error.message})
+    }
+  
+})
+
+
+  //asign event already created to userClient already created
+  router.post('/pub/:idpub/:idimage', async (req, res, next) => {
+ 
+  
+    //Get Society
+    try{    if( !mongoose.Types.ObjectId.isValid(req.params.idpub) ) return false;
+        if( !mongoose.Types.ObjectId.isValid(req.params.idimage) ) return false;
+      
+   //create a new product
+   
+      const _idpub = ObjectId(req.params.idpub);
+      const _idimage = ObjectId(req.params.idimage);
+      const pub = await Pub.findById(_idpub, function(err, doc) {});
+
+        const img = await imgModel.findById(_idimage, function(err, doc) {  });
+    //assign userSociety as a product's seller
+    
+    pub.img =img;
+    //Save the products
+    pub.save();
+     
+
+    res.status(201).json(pub);
+    }catch(error) {
+        res.status(404).json({message : error.message})
+    }
+  
+      
+    });
+
+    //asign pub to an user society pub's
+    router.post('/pubSociety/:idpub/:idusersociety', async (req, res, next) => {
+ 
+  
+        //Get Society
+        try{    if( !mongoose.Types.ObjectId.isValid(req.params.idpub) ) return false;
+            if( !mongoose.Types.ObjectId.isValid(req.params.idusersociety) ) return false;
+          
+       //create a new product
+       
+          const _idpub = ObjectId(req.params.idpub);
+          const _idusersociety = ObjectId(req.params.idusersociety);
+          const pub = await Pub.findById(_idpub, function(err, doc) {});
+    
+            const userSociety = await UserSociety.findById(_idusersociety, function(err, doc) {  });
+        //assign userSociety as a product's seller
+        
+        userSociety._pubs.push(pub);
+        //Save the products
+        userSociety.save();
+         
+    
+        res.status(201).json(userSociety);
+        }catch(error) {
+            res.status(404).json({message : error.message})
+        }
+      
+          
+        });
