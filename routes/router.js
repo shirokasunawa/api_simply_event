@@ -1,7 +1,7 @@
 const express= require('express')
 const router = express.Router()
 const UserClient = require('../models/userClient')
-
+const imgModel = require('../models/image');
 const UserSociety = require('../models/userSociety')
 const Products = require('../models/products')
 const Event = require('../models/events')
@@ -13,6 +13,7 @@ const TypeEvents = require('../models/typeEvents')
 const TypeActions = require('../models/typeactions')
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
+
 
 module.exports = router
 
@@ -1093,3 +1094,74 @@ router.put('/typeActions/:id', (req, res, next) => {
       .then(() => res.status(200).json({ message: 'checklist modifié !'}))
       .catch(error => res.status(400).json({ error }));
   });
+
+
+
+
+  ///photo
+  
+  
+  //Creating one user of client
+  router.post('/photo/', (req, res, next) => {
+    //delete req.body._id;
+    const img = new imgModel({
+      ...req.body
+    });
+
+    img.save()
+      .then(() => res.status(201).json(img))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  
+  router.get('/photo', async (req,res)=>{
+    //res.send('Hello')
+    try{
+        const img  = await imgModel.find({})
+        
+        .exec(function(err, img) {
+            res.json(img);
+            // do something
+        });        
+       
+
+    } catch(error) {
+        res.json({message : error.message})
+    }
+})
+
+router.put('/photo/:id', (req, res, next) => {
+    imgModel.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+      .then(() => res.status(200).json({ message: 'img modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  router.delete('/photo/:id',async (req,res)=>{
+    // req.params.id
+    try{
+     const img=  await imgModel.findById(req.params.id).remove() ;
+     
+     res.json({message: 'img supprimé'})
+ 
+     } catch(error) {
+         res.status(404).json({message : error.message})
+     }
+ 
+ })
+
+ 
+router.get('/photo/:id', async (req,res)=>{
+    try{
+        const img=  await imgModel.findById(req.params.id)
+       .exec(function(err, img) {
+                res.json(img);
+                // do something
+            });
+            
+       
+    }catch(error)
+    {
+        res.json({message : error.message})
+    }
+  
+})
