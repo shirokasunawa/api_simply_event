@@ -98,13 +98,14 @@ router.get('/society/:id',async (req,res)=>{
         .populate({
             path: "_pubs",
             model: Pub ,
-            select: ['img']
+            select: ['img','typeAbo','dateFin','nbrClick','nbrClickReel','endroit'],
+            populate: {
+                path:'img',
+                model: imgModel ,
+                select: ['img']
+            }
         })
-        .populate({
-            path: "img",
-            model: imgModel ,
-            select: ['img']
-        }) // key to populate
+      
         .then(usersSociety => {
            res.json(usersSociety); 
         });
