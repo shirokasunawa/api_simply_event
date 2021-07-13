@@ -19,7 +19,7 @@ app.use(express.json())
 
 app.use(
     cors({
-        origin: "http://localhost"
+        origin: ["http://192.168.1.14","http://localhost"]
     })
 )
 
