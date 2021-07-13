@@ -1329,3 +1329,27 @@ router.get('/pub/:id', async (req,res)=>{
                 res.json({message : error.message})
             }
         })
+ 
+        router.get('/pubcote', async (req,res)=>{
+            //res.send('Hello')
+            try{
+                const pub  = await Pub.find({
+                    "endroit":"coter"
+                })
+                .populate({
+                  
+                        path:'img',
+                        model: imgModel ,
+                        select: ['img']
+                    
+                })
+                .exec(function(err, pub) {
+                    res.json(pub);
+                    // do something
+                });        
+               
+        
+            } catch(error) {
+                res.json({message : error.message})
+            }
+        })
