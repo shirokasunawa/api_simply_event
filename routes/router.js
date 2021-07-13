@@ -528,6 +528,12 @@ router.post('/checklist/', (req, res, next) => {
       .catch(error => res.status(400).json({ error }));
   });
 
+  router.put('/checklistproduct/:id', (req, res, next) => {
+    Checklists.updateOne( { _id: req.params.id },{ $unset:{"productChecklist":true}})
+      .then(() => res.status(200).json({ message: 'checklist modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });
+
   //asign checklist already created to event already created
 
   router.post('/checklist/:idchecklist/:idevent', async (req, res, next) => {
