@@ -1358,7 +1358,7 @@ router.get('/pub/:id', async (req,res)=>{
             try{
                 const pub  = await Pub.find({
                     "typeAbo":"nbrclick",
-                     "nbrClickReel": { $lte: 2} 
+                     "nbrClickReel": { $lte: 300} 
                 })
                 .populate({
                   
