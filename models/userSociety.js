@@ -10,6 +10,7 @@ const userSocietySchema = mongoose.Schema({
     login :{ type: String, required: false },
     password:{ type: String, required: true },
     nameSociety :{ type: String, required: true },
+    tokenPayment : { type: String, required: false },
     _products : [{type: mongoose.Schema.Types.ObjectId, ref: 'products'}],
     _pubs : [{type: mongoose.Schema.Types.ObjectId, ref: 'pub'}]
   })
