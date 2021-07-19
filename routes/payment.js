@@ -89,6 +89,7 @@ router.post('/createTokens/', (req, res) => {
       },
   }).then(result => res.status(200).json(result)); 
 });
+
 // Create Paymente
 router.post('/doPayment/', (req, res) => {
     return stripe.charges.create({
