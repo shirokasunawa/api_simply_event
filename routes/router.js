@@ -1380,6 +1380,8 @@ router.get('/pub/:id', async (req,res)=>{
                
         
             } catch(error) {
+               
+               
                 res.json({message : error.message})
             }
         })
