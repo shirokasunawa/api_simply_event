@@ -10,6 +10,8 @@ const userSocietySchema = mongoose.Schema({
     login :{ type: String, required: false },
     password:{ type: String, required: true },
     nameSociety :{ type: String, required: true },
-    _products : [{type: mongoose.Schema.Types.ObjectId, ref: 'products'}]
+    tokenPayment : { type: String, required: false },
+    _products : [{type: mongoose.Schema.Types.ObjectId, ref: 'products'}],
+    _pubs : [{type: mongoose.Schema.Types.ObjectId, ref: 'pub'}]
   })
   module.exports = mongoose.model('userSociety', userSocietySchema);
