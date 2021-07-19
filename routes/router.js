@@ -1,7 +1,8 @@
 const express= require('express')
 const router = express.Router()
 const UserClient = require('../models/userClient')
-
+const imgModel = require('../models/image');
+const Pub = require('../models/pub');
 const UserSociety = require('../models/userSociety')
 const Products = require('../models/products')
 const Event = require('../models/events')
@@ -10,8 +11,10 @@ const Conversation = require('../models/conversation')
 const MessageClient = require('../models/messageClient')
 const MessageSociety = require('../models/messageSociety')
 const TypeEvents = require('../models/typeEvents')
+const TypeActions = require('../models/typeactions')
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
+
 
 module.exports = router
 
@@ -91,7 +94,18 @@ router.get('/society/:id',async (req,res)=>{
         const userSociety=  await UserSociety.findById(req.params.id).populate({
             path: "_products",
             select: ['typeProduct','nomProduct','priceProduct']
-        }) // key to populate
+        })
+        .populate({
+            path: "_pubs",
+            model: Pub ,
+            select: ['img','typeAbo','dateFin','nbrClick','nbrClickReel','endroit'],
+            populate: {
+                path:'img',
+                model: imgModel ,
+                select: ['img']
+            }
+        })
+      
         .then(usersSociety => {
            res.json(usersSociety); 
         });
@@ -357,6 +371,11 @@ router.get('/event/:id', async (req,res)=>{
                
                 select: ['libelle'] 
               })
+              .populate({
+                path: '_checklists',
+               
+                select: ['titreCheclist','productChecklist'] 
+              })
               .exec(function(err, event) {
                 res.json(event);
                 // do something
@@ -486,7 +505,7 @@ router.post('/checklist/', (req, res, next) => {
     });
 
     checklists.save()
-      .then(() => res.status(201).json({ message: 'checklist enregistré !'}))
+      .then(() => res.status(201).json(checklists))
       .catch(error => res.status(400).json({ error }));
   });
 
@@ -505,6 +524,12 @@ router.post('/checklist/', (req, res, next) => {
 
  router.put('/checklist/:id', (req, res, next) => {
     Checklists.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+      .then(() => res.status(200).json({ message: 'checklist modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  router.put('/checklistproduct/:id', (req, res, next) => {
+    Checklists.updateOne( { _id: req.params.id },{ $unset:{"productChecklist":true}})
       .then(() => res.status(200).json({ message: 'checklist modifié !'}))
       .catch(error => res.status(400).json({ error }));
   });
@@ -981,3 +1006,380 @@ router.put('/typeEvents/:id', (req, res, next) => {
       .then(() => res.status(200).json({ message: 'checklist modifié !'}))
       .catch(error => res.status(400).json({ error }));
   });
+
+  //TypeActions
+  
+
+
+router.get('/typeActions/:id', async (req,res)=>{
+    try{
+        const typeActions=  await TypeActions.findById(req.params.id)
+       .exec(function(err, typeActions) {
+                res.json(typeActions);
+                // do something
+            });
+            
+       
+    }catch(error)
+    {
+        res.json({message : error.message})
+    }
+  
+})
+
+//Creating one 
+router.post('/typeActions/', (req, res, next) => {
+    //delete req.body._id;
+    const typeActions = new TypeActions({
+      ...req.body
+    });
+
+    typeActions.save()
+      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
+      .catch(error => res.status(400).json({ error }));
+  }); 
+  //assign typeEvent to typeActions
+router.post('/typeActions/:idtypeevents/:idtypeactions', async (req, res, next) => {
+ 
+  
+    try{    if( !mongoose.Types.ObjectId.isValid(req.params.idtypeevents) ) return false;
+     
+        if( !mongoose.Types.ObjectId.isValid(req.params.idtypeactions) ) return false;
+      
+        const _idtypeactions = ObjectId(req.params.idtypeactions);
+
+   
+      
+      const _idtypeevents = ObjectId(req.params.idtypeevents);
+      
+
+       
+        const typeEvents = await TypeEvents.findById(_idtypeevents, function(err, doc) {  });
+
+        const typeActions = await TypeActions.findById(_idtypeactions, function(err, doc) {  });
+       
+    //assign conversation as a client and usersociety id
+    
+  
+     
+    typeActions._typeEvent.push(typeEvents);
+    typeActions.save();
+   
+    res.status(201).json(typeActions);
+    }catch(error) {
+        res.status(404).json({message : error.message})
+    }
+  
+      
+    });
+
+  router.delete('/typeActions/:id',async (req,res)=>{
+    // req.params.id
+    try{
+     const typeActions=  await TypeActions.findById(req.params.id).remove() ;
+     
+     res.json({message: 'type event supprimé'})
+ 
+     } catch(error) {
+         res.status(404).json({message : error.message})
+     }
+ 
+ })
+
+  router.get('/typeActions', async (req,res)=>{
+    //res.send('Hello')
+    try{
+        const typeActions  = await TypeActions.find({})
+        .populate({
+            path: '_typeEvent',
+            model: TypeEvents ,
+            select: ['libelle'] 
+          })
+        
+        .exec(function(err, typeActions) {
+            res.json(typeActions);
+            // do something
+        });        
+       
+
+    } catch(error) {
+        res.json({message : error.message})
+    }
+})
+
+router.put('/typeActions/:id', (req, res, next) => {
+    TypeActions.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+      .then(() => res.status(200).json({ message: 'checklist modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+
+
+
+  ///photo
+  
+  
+  //Creating one user of client
+  router.post('/photo/', (req, res, next) => {
+    //delete req.body._id;
+    const img = new imgModel({
+      ...req.body
+    });
+
+    img.save()
+      .then(() => res.status(201).json(img))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  
+  router.get('/photo', async (req,res)=>{
+    //res.send('Hello')
+    try{
+        const img  = await imgModel.find({})
+        
+        .exec(function(err, img) {
+            res.json(img);
+            // do something
+        });        
+       
+
+    } catch(error) {
+        res.json({message : error.message})
+    }
+})
+
+router.put('/photo/:id', (req, res, next) => {
+    imgModel.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+      .then(() => res.status(200).json({ message: 'img modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  router.delete('/photo/:id',async (req,res)=>{
+    // req.params.id
+    try{
+     const img=  await imgModel.findById(req.params.id).remove() ;
+     
+     res.json({message: 'img supprimé'})
+ 
+     } catch(error) {
+         res.status(404).json({message : error.message})
+     }
+ 
+ })
+
+ 
+router.get('/photo/:id', async (req,res)=>{
+    try{
+        const img=  await imgModel.findById(req.params.id)
+       .exec(function(err, img) {
+                res.json(img);
+                // do something
+            });
+            
+       
+    }catch(error)
+    {
+        res.json({message : error.message})
+    }
+  
+})
+
+//Pub
+
+  //Creating one user of client
+  router.post('/pub/', (req, res, next) => {
+    //delete req.body._id;
+    const pub = new Pub({
+      ...req.body
+    });
+
+    pub.save()
+      .then(() => res.status(201).json(pub))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  
+  router.get('/pub', async (req,res)=>{
+    //res.send('Hello')
+    try{
+        const pub  = await Pub.find({})
+        
+        .exec(function(err, pub) {
+            res.json(pub);
+            // do something
+        });        
+       
+
+    } catch(error) {
+        res.json({message : error.message})
+    }
+})
+
+router.put('/pub/:id', (req, res, next) => {
+    Pub.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+      .then(() => res.status(200).json({ message: 'img modifié !'}))
+      .catch(error => res.status(400).json({ error }));
+  });
+
+  router.delete('/pub/:id',async (req,res)=>{
+    // req.params.id
+    try{
+     const pub=  await Pub.findById(req.params.id).remove() ;
+     
+     res.json({message: 'pub supprimé'})
+ 
+     } catch(error) {
+         res.status(404).json({message : error.message})
+     }
+ 
+ })
+
+ 
+router.get('/pub/:id', async (req,res)=>{
+    try{
+        const pub=  await Pub.findById(req.params.id)
+       .exec(function(err, pub) {
+                res.json(pub);
+                // do something
+            });
+            
+       
+    }catch(error)
+    {
+        res.json({message : error.message})
+    }
+  
+})
+
+
+  //asign event already created to userClient already created
+  router.post('/pub/:idpub/:idimage', async (req, res, next) => {
+ 
+  
+    //Get Society
+    try{    if( !mongoose.Types.ObjectId.isValid(req.params.idpub) ) return false;
+        if( !mongoose.Types.ObjectId.isValid(req.params.idimage) ) return false;
+      
+   //create a new product
+   
+      const _idpub = ObjectId(req.params.idpub);
+      const _idimage = ObjectId(req.params.idimage);
+      const pub = await Pub.findById(_idpub, function(err, doc) {});
+
+        const img = await imgModel.findById(_idimage, function(err, doc) {  });
+    //assign userSociety as a product's seller
+    
+    pub.img =img;
+    //Save the products
+    pub.save();
+     
+
+    res.status(201).json(pub);
+    }catch(error) {
+        res.status(404).json({message : error.message})
+    }
+  
+      
+    });
+
+    //asign pub to an user society pub's
+    router.post('/pubSociety/:idpub/:idusersociety', async (req, res, next) => {
+ 
+  
+        //Get Society
+        try{    if( !mongoose.Types.ObjectId.isValid(req.params.idpub) ) return false;
+            if( !mongoose.Types.ObjectId.isValid(req.params.idusersociety) ) return false;
+          
+       //create a new product
+       
+          const _idpub = ObjectId(req.params.idpub);
+          const _idusersociety = ObjectId(req.params.idusersociety);
+          const pub = await Pub.findById(_idpub, function(err, doc) {});
+    
+            const userSociety = await UserSociety.findById(_idusersociety, function(err, doc) {  });
+        //assign userSociety as a product's seller
+        
+        userSociety._pubs.push(pub);
+        //Save the products
+        userSociety.save();
+         
+    
+        res.status(201).json(userSociety);
+        }catch(error) {
+            res.status(404).json({message : error.message})
+        }
+      
+          
+        });
+ 
+        router.get('/pubBanner', async (req,res)=>{
+            //res.send('Hello')
+            try{
+                const pub  = await Pub.find({
+                    "endroit":"banner"
+                })
+                .populate({
+                  
+                        path:'img',
+                        model: imgModel ,
+                        select: ['img']
+                    
+                })
+                .exec(function(err, pub) {
+                    res.json(pub);
+                    // do something
+                });        
+               
+        
+            } catch(error) {
+                res.json({message : error.message})
+            }
+        })
+ 
+        router.get('/pubcote', async (req,res)=>{
+            //res.send('Hello')
+            try{
+                const pub  = await Pub.find({
+                    "endroit":"coter"
+                })
+                .populate({
+                  
+                        path:'img',
+                        model: imgModel ,
+                        select: ['img']
+                    
+                })
+                .exec(function(err, pub) {
+                    res.json(pub);
+                    // do something
+                });        
+               
+        
+            } catch(error) {
+                res.json({message : error.message})
+            }
+        })
+        router.get('/pubmodal', async (req,res)=>{
+            //res.send('Hello')
+            try{
+                const pub  = await Pub.find({
+                    "typeAbo":"nbrclick",
+                     "nbrClickReel": { $lte: 300} 
+                })
+                .populate({
+                  
+                        path:'img',
+                        model: imgModel ,
+                        select: ['img']
+                    
+                })
+                .exec(function(err, pub) {
+                    res.json(pub);
+                    // do something
+                });        
+               
+        
+            } catch(error) {
+                res.json({message : error.message})
+            }
+        })
