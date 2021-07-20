@@ -10,7 +10,8 @@ const userClientSchema = mongoose.Schema({
    adresseMail: { type: String, required: true },
    login: { type: String, required: false },
    password: { type: String, required: true },
-   _events:[{type: mongoose.Schema.Types.ObjectId, ref: 'events'}]
+   _events:[{type: mongoose.Schema.Types.ObjectId, ref: 'events'}],
+   _conversation : [{type: mongoose.Schema.Types.ObjectId, ref: 'conversation'}]
 });
 
 
