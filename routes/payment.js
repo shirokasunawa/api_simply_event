@@ -29,11 +29,31 @@ router.post('/createCustomers/', (req, res) => {
     }).then(result => res.status(200).json(result)); 
 });
 
+// Get Customers
+router.get('/getCustomers/:id', (req, res) => {
+    return stripe.customers.retrieve(
+        req.params.id,
+    ).then(result => res.status(200).json(result)); 
+});
+
+// List customer and filtre by email
+router.get('/listCustomers/', (req, res) => {
+    return stripe.customers.list({
+        email : req.body.email
+    }).then(result => res.status(200).json(result)); 
+});
+
 // 3 Create attachPaymentMethod
 router.post('/attachPaymentMethod/:id', (req, res) => {
     return stripe.paymentMethods.attach(
         req.params.id,
         {customer : req.body.customer} 
+    ).then(result => res.status(200).json(result)); 
+});
+router.post('/updateCustomers/:id', (req, res) => {
+    return stripe.customers.update(
+        req.params.id,
+        {invoice_settings : {default_payment_method : req.body.idPaymentMethode}} 
     ).then(result => res.status(200).json(result)); 
 });
 
@@ -49,10 +69,10 @@ router.post('/doSubscription/', (req, res) => {
 });
 
 // Get Subscription
-router.get('/getSubscription/:id', (req, res) => {
-    return stripe.subscriptions.retrieve(
-        req.params.id,
-    ).then(result => res.status(200).json(result));    
+router.get('/getSubscription/', (req, res) => {
+    return stripe.subscriptions.retrieve({
+        email : res.body.email
+    }).then(result => res.status(200).json(result));    
 });
 
 // Del Subscription
@@ -64,8 +84,6 @@ router.put('/delSubscription/:id', (req, res) => {
 });
 
 /////////// Payment Net ///////////////
-
-
 
 // create Token
 router.post('/createAccount/', (req, res) => {

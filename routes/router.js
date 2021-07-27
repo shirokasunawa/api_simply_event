@@ -1278,8 +1278,8 @@ router.get('/pub/:id', async (req,res)=>{
     }catch(error) {
         res.status(404).json({message : error.message})
     }
-  
-      
+
+    
     });
 
     //asign pub to an user society pub's
