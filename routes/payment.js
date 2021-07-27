@@ -47,6 +47,12 @@ router.post('/doSubscription/', (req, res) => {
         items: [{price: req.body.price}],
     }).then(result => res.status(200).json(result));    
 });
+// Get Subscription
+router.get('/getSubscription/', (req, res) => {
+    return stripe.subscriptions.retrieve({
+        email : res.body.email
+    }).then(result => res.status(200).json(result));    
+});
 
 // Get Subscription
 router.get('/getSubscription/:id', (req, res) => {
@@ -108,3 +114,24 @@ router.post('/doPayment/', (req, res) => {
 //         exp_year: req.body.years,
 //         cvc: req.body.cvc,
 //     }, 
+
+
+// Get Customers
+router.get('/getCustomers/:id', (req, res) => {
+    return stripe.customers.retrieve(
+        req.params.id,
+    ).then(result => res.status(200).json(result)); 
+});
+
+// List customer and filtre by email
+router.get('/listCustomers/', (req, res) => {
+    return stripe.customers.list({
+        email : req.body.email
+    }).then(result => res.status(200).json(result)); 
+});
+router.post('/updateCustomers/:id', (req, res) => {
+    return stripe.customers.update(
+        req.params.id,
+        {invoice_settings : {default_payment_method : req.body.idPaymentMethode}} 
+    ).then(result => res.status(200).json(result)); 
+});
