@@ -72,10 +72,28 @@ router.get('/client/:id', async (req,res)=>{
             path: "_events",
              model: Event ,
             select: ['titreEvent','budgetEvent','_checklists']
-            
-            
-
-           
+        
+        }])
+        
+        .populate([{
+            path: "_conversation",
+             model: Conversation ,
+             populate: {
+                path: '_idUserSociety',
+                model: UserSociety,
+               select: ['nameSociety']
+             }
+             
+        }])
+        .populate([{
+            path: "_conversation",
+             model: Conversation ,
+             populate: {
+                path: '_product',
+                model: Products
+              
+             }
+             
         }])
         .then(userclient => {
             console.log(userclient)
@@ -105,7 +123,26 @@ router.get('/society/:id',async (req,res)=>{
                 select: ['img']
             }
         })
-      
+        .populate([{
+            path: "_conversation",
+             model: Conversation ,
+             populate: {
+                path: '_idUserClient',
+                model: UserClient,
+               select: ['nom']
+             }
+             
+        }])
+        .populate([{
+            path: "_conversation",
+             model: Conversation ,
+             populate: {
+                path: '_product',
+                model: Products
+              
+             }
+             
+        }])
         .then(usersSociety => {
            res.json(usersSociety); 
         });
@@ -415,7 +452,7 @@ router.post('/event/', (req, res, next) => {
  })
 
  router.put('/event/:id', (req, res, next) => {
-    Event.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
+   const event= Event.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
       .then(() => res.status(200).json({ message: 'event modifié !'}))
       .catch(error => res.status(400).json({ error }));
   });
@@ -618,7 +655,17 @@ router.get('/conversation/:id', async (req,res)=>{
            
             select: ['nameUser'] 
           })
-          .populate('_messagesClient')
+          
+          .populate([{
+            path: "_messagesClient",
+             model: MessageClient ,
+            select: ['content','dateTime','idUserClient'],
+        }])
+        .populate([{
+            path: "_messagesSociety",
+             model: MessageSociety ,
+            select: ['content','dateTime','idUserSociety'],
+        }])
        .exec(function(err, conversation) {
                 res.json(conversation);
                 // do something
@@ -632,23 +679,25 @@ router.get('/conversation/:id', async (req,res)=>{
   
 })
 
+
+
 //Creating one conversation 
-router.post('/conversation/:idclient/:idsociety', async (req, res, next) => {
+router.post('/conversation/:idclient/:idsociety/:idProduct', async (req, res, next) => {
  
   
     //Get Society
     try{    if( !mongoose.Types.ObjectId.isValid(req.params.idsociety) ) return false;
         if( !mongoose.Types.ObjectId.isValid(req.params.idclient) ) return false;
        // if( !mongoose.Types.ObjectId.isValid(req.params.idconversation) ) return false;
-      
+       if( !mongoose.Types.ObjectId.isValid(req.params.idProduct) ) return false;
   
 
-   
+       const _idProduct = ObjectId(req.params.idProduct);
       const _idclient = ObjectId(req.params.idclient);
       const _idsociety = ObjectId(req.params.idsociety);
      // const _idconversation = ObjectId(req.params.idconversation);
       const client = await UserClient.findById(_idclient, function(err, doc) {});
-
+      const product = await Products.findById(_idProduct, function(err, doc) {  });
         const society = await UserSociety.findById(_idsociety, function(err, doc) {  });
         //const conversation = await Conversation.findById(_idconversation, function(err, doc) {  });
 
@@ -656,7 +705,9 @@ router.post('/conversation/:idclient/:idsociety', async (req, res, next) => {
             ...req.body
           });
        
-    //assign conversation as a client and usersociety id
+
+          conversation._product = product;
+         
     
     conversation._idUserClient = client;
     conversation._idUserSociety = society;
@@ -750,7 +801,7 @@ router.post('/messageclient/', (req, res, next) => {
     });
 
     messageClient.save()
-      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
+      .then(() => res.status(201).json(messageClient))
       .catch(error => res.status(400).json({ error }));
   }); 
 router.post('/messageclient/:idmessageclient/:idconversation', async (req, res, next) => {
@@ -786,6 +837,75 @@ conversation.save();
   
       
     });
+
+    router.post('/conversationToSociety/:idsociety/:idconversation/', async (req, res, next) => {
+ 
+  
+        try{    if( !mongoose.Types.ObjectId.isValid(req.params.idsociety) ) return false;
+         
+            if( !mongoose.Types.ObjectId.isValid(req.params.idconversation) ) return false;
+           
+          
+            const _idsociety = ObjectId(req.params.idsociety);
+    
+        
+          
+          const _idconversation = ObjectId(req.params.idconversation);
+          
+    
+          
+            const conversation = await Conversation.findById(_idconversation, function(err, doc) {  });
+    
+            const userSociety = await UserSociety.findById(_idsociety, function(err, doc) {  });
+           
+        //assign conversation as a client and usersociety id
+        
+      
+      
+         
+        userSociety._conversation.push(conversation);
+        userSociety.save();
+       
+        res.status(201).json(userSociety);
+        }catch(error) {
+            res.status(404).json({message : error.message})
+        }
+      
+          
+        });
+        router.post('/conversationToClient/:idclient/:idconversation', async (req, res, next) => {
+ 
+  
+            try{    if( !mongoose.Types.ObjectId.isValid(req.params.idclient) ) return false;
+             
+                if( !mongoose.Types.ObjectId.isValid(req.params.idconversation) ) return false;
+              
+                const _idclient = ObjectId(req.params.idclient);
+        
+           
+              
+              const _idconversation = ObjectId(req.params.idconversation);
+              
+        
+               
+                const conversation = await Conversation.findById(_idconversation, function(err, doc) {  });
+        
+                const userClient = await UserClient.findById(_idclient, function(err, doc) {  });
+               
+            //assign conversation as a client and usersociety id
+            
+          
+             
+            userClient._conversation.push(conversation);
+            userClient.save();
+           
+            res.status(201).json(userClient);
+            }catch(error) {
+                res.status(404).json({message : error.message})
+            }
+          
+              
+            });
 
   router.delete('/messageclient/:id',async (req,res)=>{
     // req.params.id
@@ -843,7 +963,7 @@ router.post('/messagesociety/', (req, res, next) => {
     });
 
     messagesociety.save()
-      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
+      .then(() => res.status(201).json(messagesociety))
       .catch(error => res.status(400).json({ error }));
   }); 
 router.post('/messagesociety/:idmessagesociety/:idconversation', async (req, res, next) => {
@@ -1380,6 +1500,8 @@ router.get('/pub/:id', async (req,res)=>{
                
         
             } catch(error) {
+               
+               
                 res.json({message : error.message})
             }
         })
